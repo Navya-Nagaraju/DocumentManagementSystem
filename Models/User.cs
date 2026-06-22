@@ -15,5 +15,6 @@ namespace Document_Management_System.Models
         public string Role { get; set; } = "Candidate";
 
         public ICollection<Document>? Documents { get; set; }
+        public ICollection<Notification>? Notifications { get; set; }
     }
 }

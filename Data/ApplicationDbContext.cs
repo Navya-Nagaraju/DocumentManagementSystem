@@ -16,6 +16,8 @@ namespace Document_Management_System.Data
 
         public DbSet<Models.Document> Documents => Set<Models.Document>();
 
+        public DbSet<Notification> Notifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()

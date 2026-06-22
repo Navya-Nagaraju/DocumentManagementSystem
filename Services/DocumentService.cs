@@ -3,6 +3,7 @@ using Document_Management_System.DTOs;
 using Document_Management_System.Interfaces;
 using Document_Management_System.Models;
 using Microsoft.EntityFrameworkCore;
+using Document_Management_System.Enums;
 
 namespace Document_Management_System.Services
 {
@@ -104,8 +105,8 @@ namespace Document_Management_System.Services
         }
 
         public async Task<bool> ReviewDocumentAsync(
-     int documentId,
-     ReviewDocumentDTO dto)
+    int documentId,
+    ReviewDocumentDTO dto)
         {
             var document =
                 await _context.Documents.FindAsync(documentId);
@@ -116,9 +117,30 @@ namespace Document_Management_System.Services
             document.Status = dto.Status;
             document.Remarks = dto.Remarks;
 
+            string message = "";
+
+            if (dto.Status == Status.Approved)
+            {
+                message =
+                    $"Your document '{document.DocumentType}' has been approved.";
+            }
+            else if (dto.Status == Status.Rejected)
+            {
+                message =
+                    $"Your document '{document.DocumentType}' has been rejected. Remarks: {dto.Remarks}";
+            }
+
+            _context.Notifications.Add(
+                new Notification
+                {
+                    UserId = document.UserId,
+                    Message = message
+                });
+
             await _context.SaveChangesAsync();
 
             return true;
         }
+       
     }
 }

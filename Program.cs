@@ -58,6 +58,7 @@ builder.Services.AddSwaggerGen(
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped< INotificationService,NotificationService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
