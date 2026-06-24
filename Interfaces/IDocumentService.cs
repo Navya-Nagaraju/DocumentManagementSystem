@@ -15,6 +15,7 @@ namespace Document_Management_System.Interfaces
 
         Task<bool> ReviewDocumentAsync(
         int documentId,
-        ReviewDocumentDTO dto);
+        ReviewDocumentDTO dto,
+        int adminId);
     }
 }

@@ -11,13 +11,16 @@ namespace Document_Management_System.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly IAuditService _auditService;
 
         public DocumentService(
             ApplicationDbContext context,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IAuditService auditService)
         {
             _context = context;
             _environment = environment;
+            _auditService = auditService;
         }
 
         public async Task<DocumentResponseDTO> UploadAsync(
@@ -59,6 +62,10 @@ namespace Document_Management_System.Services
             _context.Documents.Add(document);
 
             await _context.SaveChangesAsync();
+            await _auditService.LogAsync(
+                userId,
+                "UPLOAD_DOCUMENT",
+                $"Uploaded {request.DocumentType}");
 
             return new DocumentResponseDTO
             {
@@ -105,9 +112,10 @@ namespace Document_Management_System.Services
         }
 
         public async Task<bool> ReviewDocumentAsync(
-    int documentId,
-    ReviewDocumentDTO dto)
-        {
+            int documentId,
+            ReviewDocumentDTO dto,
+            int adminId)
+            {
             var document =
                 await _context.Documents.FindAsync(documentId);
 
@@ -138,6 +146,23 @@ namespace Document_Management_System.Services
                 });
 
             await _context.SaveChangesAsync();
+
+            await _context.SaveChangesAsync();
+
+            if (dto.Status == Status.Approved)
+            {
+                await _auditService.LogAsync(
+                    adminId,
+                    "APPROVE_DOCUMENT",
+                    $"Approved document {document.Id}");
+            }
+            else if (dto.Status == Status.Rejected)
+            {
+                await _auditService.LogAsync(
+                    adminId,
+                    "REJECT_DOCUMENT",
+                    $"Rejected document {document.Id}");
+            }
 
             return true;
         }

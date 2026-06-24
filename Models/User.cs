@@ -16,5 +16,6 @@ namespace Document_Management_System.Models
 
         public ICollection<Document>? Documents { get; set; }
         public ICollection<Notification>? Notifications { get; set; }
+        public ICollection<AuditLog>? AuditLogs { get; set; }
     }
 }

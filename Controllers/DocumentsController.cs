@@ -64,9 +64,12 @@ namespace Document_Management_System.Controllers
             int id,
             ReviewDocumentDTO dto)
         {
+            var adminId = int.Parse(
+            User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var result =
                 await _service
-                    .ReviewDocumentAsync(id, dto);
+                    .ReviewDocumentAsync(id, dto, adminId);
 
             if (!result)
                 return NotFound("Document not found");
