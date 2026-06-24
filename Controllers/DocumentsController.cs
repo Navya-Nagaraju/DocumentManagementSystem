@@ -76,5 +76,44 @@ namespace Document_Management_System.Controllers
 
             return Ok("Document reviewed successfully");
         }
+
+        [HttpGet("download/{id}")]
+        public async Task<IActionResult> Download(int id)
+        {
+            var userId = int.Parse(
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
+
+            var role = User.FindFirst(
+                ClaimTypes.Role)!.Value;
+
+            var result =
+                await _service.DownloadAsync(
+                    id,
+                    userId,
+                    role);
+
+            return File(
+                result.FileBytes,
+                result.ContentType,
+                result.FileName);
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> Search(
+        SearchDocumentDTO request)
+        {
+            var userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            var result = await _service.SearchAsync(
+                request,
+                userId,
+                role);
+
+            return Ok(result);
+        }
     }
 }

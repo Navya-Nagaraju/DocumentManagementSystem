@@ -147,8 +147,6 @@ namespace Document_Management_System.Services
 
             await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
             if (dto.Status == Status.Approved)
             {
                 await _auditService.LogAsync(
@@ -166,6 +164,119 @@ namespace Document_Management_System.Services
 
             return true;
         }
-       
+
+        public async Task<(byte[] FileBytes,
+                   string ContentType,
+                   string FileName)>
+                   DownloadAsync(
+                   int documentId,
+                   int userId,
+                   string role)
+        {
+            var document = await _context.Documents
+                .FirstOrDefaultAsync(x => x.Id == documentId);
+
+            if (document == null)
+                throw new Exception("Document not found");
+
+            // Candidate can only download own document
+            if (role == "Candidate" &&
+                document.UserId != userId)
+            {
+                throw new UnauthorizedAccessException(
+                    "Access denied");
+            }
+
+            var uploadsPath = Path.Combine(
+                _environment.ContentRootPath,
+                "Uploads");
+
+            var filePath = Path.Combine(
+                uploadsPath,
+                document.StoredFileName);
+
+            if (!File.Exists(filePath))
+                throw new Exception("File not found");
+
+            _context.AuditLogs.Add(
+            new AuditLog
+            {
+                UserId = userId,
+                Action = "DOWNLOAD_DOCUMENT",
+                Description = $"User downloaded document with Id {documentId}",
+                ActionDate = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            var bytes =
+                await File.ReadAllBytesAsync(filePath);
+
+            return (
+                bytes,
+                document.ContentType,
+                document.OriginalFileName
+            );
+        }
+
+        public async Task<List<DocumentResponseDTO>> SearchAsync(
+    SearchDocumentDTO request,
+    int userId,
+    string role)
+        {
+            var query = _context.Documents
+                .Include(x => x.User)
+                .AsQueryable();
+
+            // Candidate can see only own docs
+            if (role == "Candidate")
+            {
+                query = query.Where(x => x.UserId == userId);
+            }
+
+            if (!string.IsNullOrEmpty(request.CandidateName))
+            {
+                query = query.Where(x =>
+                    x.User!.FullName.Contains(request.CandidateName));
+            }
+
+            if (!string.IsNullOrEmpty(request.DocumentType))
+            {
+                query = query.Where(x =>
+                    x.DocumentType.Contains(request.DocumentType));
+            }
+
+            if (request.Status.HasValue)
+            {
+                query = query.Where(x =>
+                    x.Status == request.Status.Value);
+            }
+
+            if (request.FromDate.HasValue)
+            {
+                query = query.Where(x =>
+                    x.UploadedDate >= request.FromDate.Value);
+            }
+
+            if (request.ToDate.HasValue)
+            {
+                var endDate =
+                    request.ToDate.Value.Date.AddDays(1);
+                query = query.Where(x =>
+                    x.UploadedDate <= request.ToDate.Value);
+            }
+
+            return await query
+                .Select(x => new DocumentResponseDTO
+                {
+                    Id = x.Id,
+                    DocumentType = x.DocumentType,
+                    Status = x.Status,
+                    UploadedDate = x.UploadedDate,
+                    Remarks = x.Remarks,
+                    FileName = x.OriginalFileName
+                })
+                .ToListAsync();
+        }
     }
 }

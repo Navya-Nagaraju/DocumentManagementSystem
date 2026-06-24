@@ -17,5 +17,15 @@ namespace Document_Management_System.Interfaces
         int documentId,
         ReviewDocumentDTO dto,
         int adminId);
+
+        Task<(byte[] FileBytes,
+        string ContentType,
+        string FileName)>
+        DownloadAsync(int documentId, int userId, string role);
+
+        Task<List<DocumentResponseDTO>> SearchAsync(
+        SearchDocumentDTO request,
+        int userId,
+        string role);
     }
 }
