@@ -1,5 +1,5 @@
 name: .NET CI Pipeline
-# Whenever code is pushed to the main branch, the workflow starts automatically.
+# Whenever code is pushed to the main branch, the workflow starts automatically. -- Verify notes to learn more
 on:
   push:
     branches:
